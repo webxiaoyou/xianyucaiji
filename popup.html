@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 头部区域 -->
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 6H21V18H3V6Z" stroke="#165DFF" stroke-width="2" stroke-linecap="round"/>
+          <path d="M7 6V4C7 3.44772 7.44772 3 8 3H16C16.5523 3 17 3.44772 17 4V6" stroke="#165DFF" stroke-width="2" stroke-linecap="round"/>
+          <path d="M7 10H17" stroke="#165DFF" stroke-width="2" stroke-linecap="round"/>
+          <path d="M9 14H15" stroke="#165DFF" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3>闲鱼商品采集器</h3>
+      <span class="version">v1.0.0</span>
+    </header>
+
+    <!-- 配置卡片 -->
+    <div class="config-card">
+      <div class="input-group">
+        <label for="keyword">搜索关键词</label>
+        <input type="text" id="keyword" placeholder="请输入商品关键词">
+      </div>
+      
+      <div class="input-row">
+        <div class="input-item">
+          <label for="pageCount">采集页数</label>
+          <input type="number" id="pageCount" min="1" max="100" value="10">
+        </div>
+        
+        <div class="input-item">
+          <label for="concurrentCount">并发数</label>
+          <input type="number" id="concurrentCount" min="1" max="5" value="3">
+        </div>
+      </div>
+      
+      <div class="checkbox-item">
+        <input type="checkbox" id="collectDetail" checked>
+        <label for="collectDetail">采集商品详情（价格/销量等）</label>
+      </div>
+    </div>
+
+    <!-- 操作区域 -->
+    <div class="action-area">
+      <button id="startCollect" class="primary-btn">
+        <span>开始采集</span>
+        <svg class="loading-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 进度区域 -->
+    <div id="progress" class="progress-card" style="display: none;">
+      <div class="progress-header">
+        <span>采集进度</span>
+        <span class="progress-status">0/0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-text">准备中...</div>
+    </div>
+
+    <!-- 日志区域 -->
+    <div class="log-card">
+      <div class="log-header">
+        <span>运行日志</span>
+        <button id="clearLog" class="text-btn">清空</button>
+      </div>
+      <textarea id="logOutput" readonly placeholder="运行日志将显示在这里..."></textarea>
+    </div>
+
+    <!-- 底部信息 -->
+    <footer>
+      <a href="https://github.com/yourusername/xianyu-collector" target="_blank" class="github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+        </svg>
+        开源项目
+      </a>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
