@@ -1,6 +1,23 @@
 let activeTabs = new Set();
 
+const __OSS_TOKEN = "OSS-NOTICE-3E5F8A7C-2025-09";
+let __OSS_OK = false;
+(async function __verifyOssNoticeBG() {
+  try {
+    const mf = chrome.runtime && chrome.runtime.getManifest ? chrome.runtime.getManifest() : null;
+    if (!mf || mf.x_oss_notice !== __OSS_TOKEN) throw new Error("manifest x_oss_notice missing or changed");
+    const res = await fetch(chrome.runtime.getURL("NOTICE.txt"));
+    const txt = await res.text();
+    if (!txt || !txt.includes(__OSS_TOKEN)) throw new Error("NOTICE token mismatch");
+    __OSS_OK = true;
+  } catch (e) {
+    console.error("OSS Notice verification failed (background):", e && e.message ? e.message : e);
+    __OSS_OK = false;
+  }
+})();
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!__OSS_OK) { try { sendResponse({ success: false, error: 'OSS Notice verification failed' }); } catch (_) {} return true; }
   if (request.action === 'cleanup') {
     cleanupAll();
   }

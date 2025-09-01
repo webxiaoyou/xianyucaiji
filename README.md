@@ -1,29 +1,114 @@
-# 闲鱼商品链接采集器
+# 闲鱼商品采集器
 
-![GitHub release](https://img.shields.io/github/v/release/yourusername/xianyu-collector)
-![License](https://img.shields.io/github/license/yourusername/xianyu-collector)
-![Chrome Web Store](https://img.shields.io/chrome-web-store/users/extension-id)
+采集闲鱼（goofish/闲鱼）搜索结果的商品链接与详情，支持并发抓取、实时进度、多格式导出（CSV / HTML / Excel）。适合数据整理、选品参考与研究使用。
 
-一个高效的Chrome浏览器扩展，用于批量采集闲鱼平台的商品链接及详细信息，并支持导出为CSV文件。
+仅用于学习与研究，请遵守目标网站条款与当地法律法规。
 
-## 功能特点
+## 功能特性
 
-✅ 自动搜索商品关键词  
-✅ 多页面批量采集（支持1-100页）  
-✅ 可选择采集详细信息（价格/地区/浏览量/想要数等）  
-✅ 并发控制（避免请求过于频繁）  
-✅ 本地数据处理，保护隐私安全  
-✅ 一键导出CSV文件，方便数据分析  
+- 采集
+  - 支持多页采集，模拟滚动与随机延迟，降低风控
+  - 并发采集商品详情（价格/想要数/浏览量/店铺/文案）
+  - 实时日志与进度显示
+- 导出
+  - CSV：原始文本
+  - HTML（美化版）
+    - 表头吸顶（滚动时固定在顶部）
+    - 顶部筛选：想要数/浏览量/价格区间过滤
+    - 排序：按“想要数/浏览量”一键升序/降序
+    - 图片点击放大（Lightbox）
+    - 文案默认两行，点击“查看”弹出全文
+  - Excel（.xlsx 优先）
+    - 封面图片锚定到对应单元格（B 列，100×100），不会越界
+    - 如环境不支持自动回退 .xls（固定行高/列宽、限制图片不超格）
+- 轻量易用：无需额外依赖，加载即用
 
-## 界面预览
+## 如何安装（面向使用者）
 
-![界面预览](screenshots/screenshot1.png)
-*注：请替换为实际截图地址*
+推荐从 release 目录下载现成包，无需打包。
 
-## 安装方法
+- Chrome / Edge
+  1. 下载 release 中对应浏览器的 zip 包并解压
+  2. 打开 chrome://extensions（Edge: edge://extensions）
+  3. 开启“开发者模式”
+  4. 点击“加载已解压的扩展程序”，选择解压后的文件夹（包含 manifest.json）
+- Firefox（Dev/Nightly/109+ 支持 MV3 临时加载）
+  1. 打开 about:debugging
+  2. 选择 This Firefox -> Load Temporary Add-on...
+  3. 选择项目目录中的 manifest.json
 
-### 开发版安装（适合开发者）
+提示：Edge 可以直接使用 Chrome 包。
 
-1. 克隆本仓库：
-   ```bash
-   git clone https://github.com/yourusername/xianyu-collector.git
+## 使用步骤
+
+1. 打开闲鱼搜索页（例如 https://www.goofish.com/search?q=小米）
+2. 在扩展弹窗中输入：
+   - 搜索关键词、采集页数、并发数
+   - 是否采集详情
+   - 导出格式（CSV/HTML/Excel）
+3. 点击“开始采集”
+4. 观察弹窗日志与进度；完成后将自动下载导出文件
+
+## 导出说明
+
+- CSV
+  - 字段：序号、商品封面（链接）、商品链接、发布地、想要数、浏览量、价格、店铺名称、产品文案
+- HTML（美化版）
+  - 打开后可直接筛选与排序
+    - 表头吸顶：滚动时始终可见
+    - 过滤：想要数/浏览量/价格设置最小/最大值
+    - 排序：按“想要数/浏览量”升序/降序
+  - 图片点击可放大预览；文案默认两行，点击“查看”弹出完整内容
+- Excel
+  - .xlsx：封面图片放在对应单元格内（B 列，100×100）
+  - 若回退 .xls：固定行高/列宽，限制图片不超出单元格
+
+## 常见问题
+
+- 页面提示“Receiving end does not exist”
+  - 通常为内容脚本未成功注入（例如之前有语法错误或未在目标域名生效）
+  - 请在目标页按 F12 打开 Console 检查是否有 SyntaxError，修复后刷新页面再试
+- 采集不到数据
+  - 页面结构变化或加载过慢时可能出现空数据
+  - 建议适当增加采集页数/并发前先尝试较小值，并确保搜索结果列表已加载
+- Excel 图片未显示或越界
+  - 优先选择 .xlsx 导出（图片会锚定在单元格中）
+  - 个别环境回退 .xls 时，已固定行高/列宽限制溢出；仍异常可反馈具体 Excel 版本
+- HTML 文件打开无样式
+  - HTML 导出自带内联样式与脚本，无需外链；若本地安全策略限制脚本执行，请使用浏览器打开本地文件或将文件放置在本地 HTTP 服务下
+
+## 权限说明（简要）
+
+- activeTab / scripting / tabs：注入脚本与当前页交互
+- host_permissions：匹配闲鱼域名与图片 CDN 域名，用于抓取与内嵌图片
+- storage：如需保存设置可使用（默认不强依赖）
+
+## 开发者指南（可选）
+
+- 目录说明
+  - content.js：页面采集、导出（含 HTML/Excel）
+  - background.js：详情抓取与消息路由
+  - popup.*：扩展弹窗 UI 与交互
+  - styles.css：弹窗样式
+  - xlsx-lite.js：最小化 .xlsx 生成，图片锚定到单元格
+- 本地调试
+  - Chrome/Edge：chrome://extensions -> 加载已解压扩展
+  - Firefox：about:debugging -> Load Temporary Add-on
+
+## 反馈与贡献
+
+- 欢迎提交 Issue 和 PR，描述你的使用场景与复现步骤
+- 建议附上：
+  - 关键词、页数、并发数、导出格式
+  - 浏览器版本与系统信息
+  - 如有报错，请附 Console/日志内容
+
+## 隐私与免责声明
+
+- 本工具仅在本地浏览器运行，不会上传你的采集数据
+- 仅用于学习与研究，请勿用于任何商业或违反网站条款的用途
+- 使用本工具造成的一切后果由使用者自行承担
+
+## 许可
+
+MIT

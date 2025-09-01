@@ -1,4 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const __OSS_TOKEN = "OSS-NOTICE-3E5F8A7C-2025-09";
+  let __OSS_OK = false;
+  async function __verifyOssNotice() {
+    try {
+      const mf = chrome.runtime && chrome.runtime.getManifest ? chrome.runtime.getManifest() : null;
+      if (!mf || mf.x_oss_notice !== __OSS_TOKEN) throw new Error('manifest x_oss_notice missing or changed');
+      const res = await fetch(chrome.runtime.getURL('NOTICE.txt'));
+      const txt = await res.text();
+      if (!txt || !txt.includes(__OSS_TOKEN)) throw new Error('NOTICE token mismatch');
+      __OSS_OK = true;
+    } catch (e) {
+      __OSS_OK = false;
+    }
+  }
+  __verifyOssNotice().then(() => {
+    if (!__OSS_OK) {
+      const btn = document.getElementById('startCollect');
+      const out = document.getElementById('logOutput');
+      if (btn) btn.disabled = true;
+      if (out) {
+        const ts = new Date().toLocaleTimeString();
+        out.value += `[${ts}] 开源告知校验失败，扩展已禁用\n`;
+      }
+    }
+  });
   const startButton = document.getElementById('startCollect');
   const keywordInput = document.getElementById('keyword');
   const pageCountInput = document.getElementById('pageCount');
@@ -6,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressContainer = document.getElementById('progress');
   const progressText = document.querySelector('.progress-text');
   const progressStatus = document.querySelector('.progress-status');
+  const progressFill = document.querySelector('.progress-fill');
   const logOutput = document.getElementById('logOutput');
   const clearLogButton = document.getElementById('clearLog');
 
@@ -45,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateProgress(current, total, status = '') {
     progressContainer.style.display = 'block';
     progressStatus.textContent = `${current}/${total}`;
+    const percent = total > 0 ? Math.floor((current / total) * 100) : 0;
+    progressFill.style.width = `${percent}%`;
     if (status) {
       progressText.textContent = status;
     }
@@ -61,6 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   startButton.addEventListener('click', async () => {
+    if (typeof __OSS_OK !== 'undefined' && !__OSS_OK) {
+      const ts = new Date().toLocaleTimeString();
+      logOutput.value += `[${ts}] 开源告知校验失败，无法开始采集\n`;
+      return;
+    }
     try {
       const keyword = keywordInput.value.trim();
       if (!keyword) {
@@ -77,11 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const collectDetail = collectDetailCheckbox.checked;
+      const exportTypeEl = document.getElementById('exportType');
+      const exportType = exportTypeEl ? exportTypeEl.value : 'csv';
 
       startButton.textContent = '采集中...';
       startButton.disabled = true;
       progressContainer.style.display = 'block';
       progressText.textContent = '正在采集商品链接...';
+      progressFill.style.width = '0%';
+      progressStatus.textContent = '0/0';
       
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       
@@ -109,12 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
         keyword: keyword,
         collectDetail: collectDetail,
         concurrentCount: concurrentCount,
-        onProgress: (current, total, status) => updateProgress(current, total, status)
+        exportType: exportType
       });
       
       if (response?.links?.length > 0) {
         if (collectDetail) {
-          log('详细数据已导出到CSV文件');
+          log('详细数据已导出');
         }
         startButton.textContent = `成功采集 ${response.links.length} 个商品`;
         log(`采集完成，共 ${response.links.length} 个商品`);
@@ -127,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startButton.disabled = false;
       setTimeout(() => {
         startButton.textContent = '开始采集';
-        progressContainer.style.display = 'none';
+        // 进度面板保留，方便查看最终状态
       }, 2000);
     }
   });
@@ -136,5 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (request.action === 'log') {
       log(request.message);
     }
+    if (request.action === 'progress') {
+      const { current = 0, total = 0, status = '' } = request;
+      updateProgress(current, total, status);
+    }
   });
-}); 
+});
